@@ -98,7 +98,7 @@
    "execution_count": 45,
    "id": "c6f32326-345d-4467-8e6d-388126940f26",
    "metadata": {
-    "scrolled": true
+    "scrolled": True
    },
    "outputs": [
     {
@@ -187,7 +187,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": None,
    "id": "c83bd9d9-a2a8-4ca5-81a9-ee9a671f298a",
    "metadata": {},
    "outputs": [],
