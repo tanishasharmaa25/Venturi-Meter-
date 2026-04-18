@@ -1,12 +1,12 @@
 import streamlit as st
 import numpy as np
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 import time
 
-st.set_page_config(layout="wide")
+st.title("Venturi Flow Simulation")
 
 # ---------------------------
-# CORE FUNCTIONS
+# FUNCTIONS
 # ---------------------------
 def area(d):
     return np.pi * (d / 2) ** 2
@@ -20,11 +20,8 @@ def velocity(d1, d2, dp, rho):
 
     return v1, v2
 
-# ---------------------------
-# VENTURI SHAPE
-# ---------------------------
 def venturi_shape(d1, d2):
-    x = np.linspace(0, 10, 200)
+    x = np.linspace(0, 10, 100)
 
     y = np.piecewise(
         x,
@@ -38,94 +35,71 @@ def venturi_shape(d1, d2):
     return x, y
 
 # ---------------------------
-# INIT PARTICLES
+# PARTICLE SIMULATION
 # ---------------------------
-if "particles" not in st.session_state:
-    st.session_state.particles = np.linspace(0, 10, 40)
+def simulate(d1, d2, v1, v2):
 
-# ---------------------------
-# ANIMATION FUNCTION
-# ---------------------------
-def animate(d1, d2, v1, v2):
     x, y = venturi_shape(d1, d2)
+
+    # persist particles
+    if "particles" not in st.session_state:
+        st.session_state.particles = np.linspace(0, 10, 20)
 
     particles = st.session_state.particles
 
-    fig = go.Figure()
+    fig, ax = plt.subplots()
+    placeholder = st.empty()
 
-    # pipe shape
-    fig.add_trace(go.Scatter(x=x, y=y, mode='lines', line=dict(color='black')))
-    fig.add_trace(go.Scatter(x=x, y=-y, mode='lines', line=dict(color='black')))
+    for _ in range(60):
+        ax.clear()
 
-    # update particles
-    new_particles = []
+        # draw pipe
+        ax.plot(x, y, color="black")
+        ax.plot(x, -y, color="black")
+        ax.fill_between(x, y, -y, alpha=0.1)
 
-    for pos in particles:
+        # move particles
+        for i in range(len(particles)):
+            pos = particles[i]
 
-        if pos < 3:
-            pos += v1 * 0.05
-        elif 3 <= pos <= 7:
-            pos += v2 * 0.05
-        else:
-            pos += v1 * 0.05
+            if pos < 3:
+                pos += v1 * 0.02
+            elif 3 <= pos <= 7:
+                pos += v2 * 0.02
+            else:
+                pos += v1 * 0.02
 
-        if pos > 10:
-            pos = 0
+            if pos > 10:
+                pos = 0
 
-        new_particles.append(pos)
+            particles[i] = pos
 
-    st.session_state.particles = new_particles
+            ax.plot(pos, 0, "bo")
 
-    # particle colors (pressure)
-    colors = ["red" if 3 <= p <= 7 else "blue" for p in new_particles]
+        ax.set_xlim(0, 10)
+        ax.set_ylim(-d1, d1)
+        ax.set_title("Venturi Flow")
 
-    fig.add_trace(go.Scatter(
-        x=new_particles,
-        y=[0]*len(new_particles),
-        mode='markers',
-        marker=dict(size=8, color=colors)
-    ))
-
-    fig.update_layout(
-        title="Venturi Flow Simulation",
-        xaxis=dict(range=[0,10], showgrid=False, visible=False),
-        yaxis=dict(range=[-d1, d1], showgrid=False, visible=False),
-        height=400
-    )
-
-    return fig
-
-# ---------------------------
-# UI
-# ---------------------------
-st.title("🚰 Venturi Meter Interactive Simulation")
-
-col1, col2 = st.columns([1, 2])
-
-# CONTROLS
-with col1:
-    st.subheader("Controls")
-
-    d1 = st.slider("Inlet Diameter", 0.2, 1.0, 0.5)
-    d2 = st.slider("Throat Diameter", 0.1, 0.5, 0.2)
-    dp = st.slider("Pressure Difference", 100, 5000, 1000)
-    rho = st.slider("Fluid Density", 500, 1500, 1000)
-
-    v1, v2 = velocity(d1, d2, dp, rho)
-
-    st.metric("Inlet Velocity", f"{v1:.2f} m/s")
-    st.metric("Throat Velocity", f"{v2:.2f} m/s")
-
-    st.markdown("### 🔵 High Pressure | 🔴 Low Pressure")
-
-# SIMULATION
-with col2:
-    st.subheader("Simulation")
-
-    chart = st.empty()
-
-    # smooth animation loop
-    for _ in range(200):
-        fig = animate(d1, d2, v1, v2)
-        chart.plotly_chart(fig, use_container_width=True)
+        placeholder.pyplot(fig, clear_figure=True)
         time.sleep(0.03)
+
+    st.session_state.particles = particles
+
+# ---------------------------
+# UI INPUTS
+# ---------------------------
+d1 = st.slider("Inlet Diameter", 0.2, 1.0, 0.4)
+d2 = st.slider("Throat Diameter", 0.1, 0.5, 0.2)
+dp = st.slider("Pressure Difference", 100, 5000, 1000)
+rho = st.slider("Density", 500, 1500, 1000)
+
+v1, v2 = velocity(d1, d2, dp, rho)
+
+st.write(f"Inlet Velocity: {v1:.2f} m/s")
+st.write(f"Throat Velocity: {v2:.2f} m/s")
+
+# ---------------------------
+# RUN SIMULATION
+# ---------------------------
+if st.button("Start Simulation"):
+    simulate(d1, d2, v1, v2)
