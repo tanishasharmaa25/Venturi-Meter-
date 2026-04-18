@@ -6,95 +6,120 @@ import time
 st.set_page_config(layout="wide")
 
 # ---------------------------
-# CORE LOGIC
+# CORE FUNCTIONS
 # ---------------------------
 def area(d):
-    return np.pi * (d/2)**2
+    return np.pi * (d / 2) ** 2
 
 def velocity(d1, d2, dp, rho):
     A1 = area(d1)
     A2 = area(d2)
 
-    v2 = np.sqrt((2*dp)/(rho*((A1/A2)**2 - 1)))
-    v1 = (A2/A1)*v2
+    v2 = np.sqrt((2 * dp) / (rho * ((A1 / A2) ** 2 - 1)))
+    v1 = (A2 / A1) * v2
 
     return v1, v2
 
-
 # ---------------------------
-# DRAW VENTURI
+# VENTURI SHAPE
 # ---------------------------
 def venturi_shape(d1, d2):
     x = np.linspace(0, 10, 200)
 
     y = np.piecewise(
         x,
-        [x < 3, (x>=3)&(x<=7), x>7],
-        [lambda x: d1/2,
-         lambda x: d1/2 - (d1-d2)/2*((x-3)/4),
-         lambda x: d1/2]
+        [x < 3, (x >= 3) & (x <= 7), x > 7],
+        [
+            lambda x: d1 / 2,
+            lambda x: d1 / 2 - (d1 - d2) / 2 * ((x - 3) / 4),
+            lambda x: d1 / 2,
+        ],
     )
     return x, y
 
+# ---------------------------
+# PRESSURE COLOR FUNCTION
+# ---------------------------
+def pressure_color(x):
+    # High pressure → blue, low pressure → red
+    if 3 <= x <= 7:
+        return "red"   # low pressure
+    else:
+        return "blue"  # high pressure
 
 # ---------------------------
 # ANIMATION
 # ---------------------------
-def animate(d1, d2, v2):
+def animate(d1, d2, v1, v2):
     x, y = venturi_shape(d1, d2)
 
     fig, ax = plt.subplots()
     placeholder = st.empty()
 
-    particles = np.linspace(0, 10, 25)
+    particles = np.linspace(0, 10, 30)
 
-    for frame in range(60):
+    for frame in range(80):
         ax.clear()
 
-        # pipe
+        # Pipe walls
         ax.plot(x, y, color="black")
         ax.plot(x, -y, color="black")
-        ax.fill_between(x, y, -y, alpha=0.1)
 
-        # particles
+        # Pressure shading
+        for i in range(len(x)-1):
+            color = "lightblue" if x[i] < 3 or x[i] > 7 else "lightcoral"
+            ax.fill_between([x[i], x[i+1]], y[i], -y[i], color=color, alpha=0.2)
+
+        # Particle motion
         for i in range(len(particles)):
-            pos = (particles[i] + frame*0.1*v2) % 10
+            pos = particles[i]
 
-            # faster in throat
-            speed = 2 if 3 <= pos <= 7 else 1
-            ax.plot(pos, 0, "o")
+            if pos < 3:
+                pos += v1 * 0.02
+            elif 3 <= pos <= 7:
+                pos += v2 * 0.02
+            else:
+                pos += v1 * 0.02
+
+            if pos > 10:
+                pos = 0
+
+            particles[i] = pos
+
+            ax.plot(pos, 0, "o", color=pressure_color(pos))
 
         ax.set_xlim(0, 10)
         ax.set_ylim(-d1, d1)
-        ax.set_title("Flow Through Venturi Meter")
+        ax.set_title("Venturi Flow Simulation (Velocity + Pressure)")
 
         placeholder.pyplot(fig)
         time.sleep(0.05)
 
-
 # ---------------------------
 # UI
 # ---------------------------
-st.title("Venturi Meter Interactive Simulation")
+st.title("🚰 Venturi Meter Interactive Simulation")
 
 col1, col2 = st.columns([1, 2])
 
-# LEFT: CONTROLS
+# CONTROLS
 with col1:
     st.subheader("Controls")
 
     d1 = st.slider("Inlet Diameter", 0.2, 1.0, 0.5)
     d2 = st.slider("Throat Diameter", 0.1, 0.5, 0.2)
     dp = st.slider("Pressure Difference", 100, 5000, 1000)
-    rho = st.slider("Density", 500, 1500, 1000)
+    rho = st.slider("Fluid Density", 500, 1500, 1000)
 
     v1, v2 = velocity(d1, d2, dp, rho)
 
     st.metric("Inlet Velocity", f"{v1:.2f} m/s")
     st.metric("Throat Velocity", f"{v2:.2f} m/s")
 
-# RIGHT: SIMULATION
+    st.markdown("### 🔵 High Pressure | 🔴 Low Pressure")
+
+# SIMULATION
 with col2:
     st.subheader("Simulation")
 
-    animate(d1, d2, v2)
+    animate(d1, d2, v1, v2)
