@@ -5,7 +5,7 @@ import time
 
 st.set_page_config(layout="wide")
 
-#Core Function
+# Core Function
 def area(d):
     return np.pi * (d/2)**2
 
@@ -19,7 +19,6 @@ def velocity(d1, d2, dp, rho):
     return v1, v2
 
 # Venturi shape
-
 def venturi_shape(d1, d2):
     x = np.linspace(0, 10, 200)
 
@@ -34,17 +33,14 @@ def venturi_shape(d1, d2):
     )
     return x, y
 
-#Pressure colour Function
-
+# Pressure colour
 def pressure_colour(x):
-    # High pressure : blue, low pressure : red
     if 3 <= x <= 7:
-        return "red"   #low pressure
+        return "red"   # low pressure
     else:
-        return "blue"  #high pressure
+        return "blue"  # high pressure
 
-#Animation
-
+# Animation
 def animate(d1, d2, v1, v2):
     x, y = venturi_shape(d1, d2)
 
@@ -56,16 +52,16 @@ def animate(d1, d2, v1, v2):
     for frame in range(80):
         ax.clear()
 
-        #Pipe walls
+        # Pipe walls
         ax.plot(x, y, color="black")
         ax.plot(x, -y, color="black")
 
-        #Pressure shading
+        # Pressure shading
         for i in range(len(x)-1):
             color = "lightblue" if x[i] < 3 or x[i] > 7 else "lightcoral"
             ax.fill_between([x[i], x[i+1]], y[i], -y[i], color=color, alpha=0.2)
 
-        #Particle motion
+        # Particle motion
         for i in range(len(particles)):
             pos = particles[i]
 
@@ -80,7 +76,6 @@ def animate(d1, d2, v1, v2):
                 pos = 0
 
             particles[i] = pos
-
             ax.plot(pos, 0, "o", color=pressure_colour(pos))
 
         ax.set_xlim(0, 10)
@@ -89,36 +84,36 @@ def animate(d1, d2, v1, v2):
 
         placeholder.pyplot(fig)
         time.sleep(0.05)
-        
+
 #Velocity Graph
-
-def plot_velocity_graph(d1, d2, v1, v2):
-    x = np.linspace(0, 10, 200)
-
-    v = np.piecewise(
-        x,
-        [x < 3, (x >= 3) & (x <= 7), x > 7],
-        [
-            lambda x: v1,
-            lambda x: v2,
-            lambda x: v1,
-        ],
-    )
-
+def plot_velocity_graph(v1, v2):
     fig, ax = plt.subplots()
-    ax.plot(x, v)
-    ax.set_title("Velocity Variation Along Venturi")
-    ax.set_xlabel("Position")
+
+    labels = ['Inlet', 'Throat']
+    values = [v1, v2]
+
+    bars = ax.bar(labels, values)
+
+    # Color coding
+    bars[0].set_color('blue')
+    bars[1].set_color('red')
+
+    # Values on bars
+    for i, v in enumerate(values):
+        ax.text(i, v + 0.05, f"{v:.2f}", ha='center', fontweight='bold')
+
     ax.set_ylabel("Velocity (m/s)")
+    ax.set_title("Inlet vs Throat Velocity")
+    ax.set_ylim(0, max(values) * 1.3)
 
     return fig
 
-#UI
+# UI
 st.title("Venturi Meter Interactive Simulation")
 
 col1, col2 = st.columns([1, 2])
 
-#Controls
+# Controls
 with col1:
     st.subheader("Controls")
 
@@ -134,7 +129,7 @@ with col1:
 
     st.markdown("### 🔵 High Pressure | 🔴 Low Pressure")
 
-#Simulation
+# Simulation
 with col2:
     st.subheader("Simulation")
 
@@ -142,5 +137,5 @@ with col2:
         animate(d1, d2, v1, v2)
 
     st.subheader("Velocity Graph")
-    fig = plot_velocity_graph(d1, d2, v1, v2)
+    fig = plot_velocity_graph(v1, v2)
     st.pyplot(fig)
