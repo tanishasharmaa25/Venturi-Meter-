@@ -7,14 +7,14 @@ st.set_page_config(layout="wide")
 
 #Core Function
 def area(d):
-    return np.pi * (d / 2) ** 2
+    return np.pi * (d/2)**2
 
 def velocity(d1, d2, dp, rho):
     A1 = area(d1)
     A2 = area(d2)
 
-    v2 = np.sqrt((2 * dp) / (rho * ((A1 / A2) ** 2 - 1)))
-    v1 = (A2 / A1) * v2
+    v2 = np.sqrt((2*dp) / (rho*((A1 / A2)**2 - 1)))
+    v1 = (A2 / A1)*v2
 
     return v1, v2
 
@@ -138,9 +138,8 @@ with col1:
 #Simulation
 with col2:
     st.subheader("Simulation")
-
     animate(d1, d2, v1, v2)
-
-     st.subheader("Velocity Graph")
+    
+    st.subheader("Velocity Graph")
     fig = plot_velocity_graph(d1,d2,v1,v2)
     st.pyplot(fig)
