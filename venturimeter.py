@@ -132,8 +132,7 @@ with col1:
     st.metric("Inlet Velocity", f"{v1:.2f} m/s")
     st.metric("Throat Velocity", f"{v2:.2f} m/s")
 
-    st.markdown("### 🔵 High Pressure
-    | 🔴 Low Pressure")
+    st.markdown("### 🔵 High Pressure | 🔴 Low Pressure")
 
 #Simulation
 with col2:
