@@ -137,8 +137,10 @@ with col1:
 #Simulation
 with col2:
     st.subheader("Simulation")
-    animate(d1, d2, v1, v2)
-    
+
+    if st.button("Start Simulation"):
+        animate(d1, d2, v1, v2)
+
     st.subheader("Velocity Graph")
-    fig = plot_velocity_graph(d1,d2,v1,v2)
+    fig = plot_velocity_graph(d1, d2, v1, v2)
     st.pyplot(fig)
