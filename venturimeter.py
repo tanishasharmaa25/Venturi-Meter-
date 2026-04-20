@@ -173,32 +173,31 @@ Venturi meter has been divided into three parts such as:
 3. Diverging Side
 """)
         st.info("Remember: Velocity ↑ ⇒ Pressure ↓ (Bernoulli Principle)")
+    with tab2:
+        st.subheader("Step-by-Step Derivation")
+        st.markdown("### 1. Continuity Equation")
+        st.latex(r"A_1 v_1 = A_2 v_2")
         
-        with tab2:
-            
-            st.subheader("Step-by-Step Derivation")
-            st.markdown("### 1. Continuity Equation")
-            st.latex(r"A_1 v_1 = A_2 v_2")
-            st.markdown("""
+        st.markdown("""
 This means flow is conserved:
 - If area decreases → velocity must increase
 """)
-            st.markdown("### 2. Bernoulli’s Equation")
-            st.latex(r"P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2")
-            
-            st.markdown("### 3. Rearranging")
-            st.latex(r"P_1 - P_2 = \frac{1}{2}\rho (v_2^2 - v_1^2)")
-            
-            st.markdown("### 4. Substitute using Continuity")
-            st.latex(r"v_1 = \frac{A_2}{A_1} v_2")
-            
-            st.markdown("### 5. Final Formula")
-            st.latex(r"v_2 = \sqrt{\frac{2\Delta P}{\rho\left(\left(\frac{A_1}{A_2}\right)^2 - 1\right)}}")
-            
-            st.success("This is the formula used!")
+        st.markdown("### 2. Bernoulli’s Equation")
+        st.latex(r"P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2")
+        
+        st.markdown("### 3. Rearranging")
+        st.latex(r"P_1 - P_2 = \frac{1}{2}\rho (v_2^2 - v_1^2)")
+        
+        st.markdown("### 4. Substitute using Continuity")
+        st.latex(r"v_1 = \frac{A_2}{A_1} v_2")
+        
+        st.markdown("### 5. Final Formula")
+        st.latex(r"v_2 = \sqrt{\frac{2\Delta P}{\rho\left(\left(\frac{A_1}{A_2}\right)^2 - 1\right)}}")
+        
+        st.success("This is the formula used!")
 
 #Quiz Section
-elif menu == "quiz":
+elif menu == "Quiz":
     st.header("Quiz")
     if "score" not in st.session_state:
         st.session_state.score = 0
@@ -269,32 +268,38 @@ elif menu == "quiz":
                 st.error(f"Wrong! Correct answer: {q['answer']}")
                 st.session_state.weak_topics.append(q["topic"])
                 
-                #scoreboard
-            st.subheader("Score Board")st.metric("Score", st.session_state.score)
-            st.metric("Attempted", st.session_state.attempted)
-            
-            if st.session_state.attempted > 0:
-                accuracy = (st.session_state.score / st.session_state.attempted) * 100
-                st.metric("Accuracy", f"{accuracy:.2f}%")
-                
-            #Weak topic analysis
-            st.subheader("Weak Topic Analysis")
-            if st.session_state.weak_topics:
-                weak_summary = {}
-                for topic in st.session_state.weak_topics:
-                    if topic in weak_summary:
-                        weak_summary[topic] += 1
-                    else:
-                        weak_summary[topic] = 1
-                st.write("You need to focus on these topics:")
-                for topic, count in weak_summary.items():
-                    st.warning(f"{topic} (mistakes: {count})")
+#Scoreboard
+st.subheader("Score Board")
+st.metric("Score", st.session_state.score)
+st.metric("Attempted", st.session_state.attempted)
+
+if st.session_state.attempted > 0:
+    accuracy = (st.session_state.score / st.session_state.attempted) * 100
+    st.metric("Accuracy", f"{accuracy:.2f}%")
+
+    # Weak topic analysis
+    st.subheader("Weak Topic Analysis")
+
+    if st.session_state.weak_topics:
+        weak_summary = {}
+
+        for topic in st.session_state.weak_topics:
+            if topic in weak_summary:
+                weak_summary[topic] += 1
+            else:
+                weak_summary[topic] = 1
+
+        st.write("You need to focus on these topics:")
+
+        for topic, count in weak_summary.items():
+            st.warning(f"{topic} (mistakes: {count})")
+
     else:
         st.success("Great! No weak topics so far")
 
-
-   if st.button("Reset Quiz"):
-       st.session_state.score = 0
-       st.session_state.attempted = 0
-       st.session_state.weak_topics = []
-       st.experimental_rerun()
+#Reset button
+if st.button("Reset Quiz"):
+    st.session_state.score = 0
+    st.session_state.attempted = 0
+    st.session_state.weak_topics = []
+    st.experimental_rerun()
