@@ -268,7 +268,7 @@ elif menu == "Quiz":
                 st.error(f"Wrong! Correct answer: {q['answer']}")
                 st.session_state.weak_topics.append(q["topic"])
                 
-#Scoreboard
+# Scoreboard
 st.subheader("Score Board")
 st.metric("Score", st.session_state.score)
 st.metric("Attempted", st.session_state.attempted)
@@ -297,7 +297,7 @@ if st.session_state.attempted > 0:
     else:
         st.success("Great! No weak topics so far")
 
-#Reset button
+# Reset button
 if st.button("Reset Quiz"):
     st.session_state.score = 0
     st.session_state.attempted = 0
