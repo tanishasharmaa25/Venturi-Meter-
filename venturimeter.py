@@ -268,40 +268,33 @@ elif menu == "quiz":
             else:
                 st.error(f"Wrong! Correct answer: {q['answer']}")
                 st.session_state.weak_topics.append(q["topic"])
-
-#scoreboard
-st.subheader("Score Board")
-
-st.metric("Score", st.session_state.score)
-st.metric("Attempted", st.session_state.attempted)
-
-if st.session_state.attempted > 0:
-    accuracy = (st.session_state.score / st.session_state.attempted) * 100
-    st.metric("Accuracy", f"{accuracy:.2f}%")
-
-#Weak topic analysis
-st.subheader("Weak Topic Analysis")
-
-if st.session_state.weak_topics:
-    weak_summary = {}
-
-    for topic in st.session_state.weak_topics:
-        if topic in weak_summary:
-            weak_summary[topic] += 1
-        else:
-            weak_summary[topic] = 1
-
-    st.write("You need to focus on these topics:")
-
-    for topic, count in weak_summary.items():
-        st.warning(f"{topic} (mistakes: {count})")
-
-else:
-    st.success("Great! No weak topics so far")
+                
+                #scoreboard
+            st.subheader("Score Board")st.metric("Score", st.session_state.score)
+            st.metric("Attempted", st.session_state.attempted)
+            
+            if st.session_state.attempted > 0:
+                accuracy = (st.session_state.score / st.session_state.attempted) * 100
+                st.metric("Accuracy", f"{accuracy:.2f}%")
+                
+            #Weak topic analysis
+            st.subheader("Weak Topic Analysis")
+            if st.session_state.weak_topics:
+                weak_summary = {}
+                for topic in st.session_state.weak_topics:
+                    if topic in weak_summary:
+                        weak_summary[topic] += 1
+                    else:
+                        weak_summary[topic] = 1
+                st.write("You need to focus on these topics:")
+                for topic, count in weak_summary.items():
+                    st.warning(f"{topic} (mistakes: {count})")
+    else:
+        st.success("Great! No weak topics so far")
 
 
-if st.button("Reset Quiz"):
-    st.session_state.score = 0
-    st.session_state.attempted = 0
-    st.session_state.weak_topics = []
-    st.experimental_rerun()
+   if st.button("Reset Quiz"):
+       st.session_state.score = 0
+       st.session_state.attempted = 0
+       st.session_state.weak_topics = []
+       st.experimental_rerun()
