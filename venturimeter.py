@@ -110,52 +110,53 @@ def plot_velocity_graph(v1, v2):
     return fig
 
 #UI
-st.title("Venturi Meter Flow Simulation")
-
-col1, col2 = st.columns([1, 2])
-
-#Controls
-with col1:
-    st.subheader("Controls")
-
-    d1 = st.slider("Inlet Diameter", 0.2, 1.0, 0.5)
-    d2 = st.slider("Throat Diameter", 0.1, 0.5, 0.2)
-    dp = st.slider("Pressure Difference", 100, 5000, 1000)
-    rho = st.slider("Fluid Density", 500, 1500, 1000)
-
-    v1, v2 = velocity(d1, d2, dp, rho)
-
-    st.metric("Inlet Velocity", f"{v1:.2f} m/s")
-    st.metric("Throat Velocity", f"{v2:.2f} m/s")
-
-    st.markdown("### 🔵 High Pressure | 🔴 Low Pressure")
-
-#Simulation
-with col2:
-    st.subheader("Simulation")
-    animate(d1, d2, v1, v2)
-
-    st.subheader("Velocity Graph")
+menu = st.sidebar.selectbox("Select Section", ["Simulation", "Notes", "Quiz"])
+if menu == "Simulation":
+    st.title("Venturi Meter Flow Simulation")
+    
+    col1, col2 = st.columns([1, 2])
+    #Controls
+    with col1:
+        st.subheader("Controls")
+        d1 = st.slider("Inlet Diameter", 0.2, 1.0, 0.5)
+        d2 = st.slider("Throat Diameter", 0.1, 0.5, 0.2)
+        dp = st.slider("Pressure Difference", 100, 5000, 1000)
+        rho = st.slider("Fluid Density", 500, 1500, 1000)
         
-    if st.button("Start Simulation"):
-        fig = plot_velocity_graph(v1, v2)
-        st.pyplot(fig)
+        v1, v2 = velocity(d1, d2, dp, rho)
+        
+        st.metric("Inlet Velocity", f"{v1:.2f} m/s")
+        st.metric("Throat Velocity", f"{v2:.2f} m/s")
+        
+        st.markdown("### 🔵 High Pressure | 🔴 Low Pressure")
+        
+        if st.button("Start Simulation"):
+            animate(d1, d2, v1, v2)
+            
+            #Simulation
+            
+            with col2:
+                st.subheader("Velocity Graph")
+                
+                fig = plot_velocity_graph(v1, v2)
+                st.pyplot(fig)
+        
 #Notes Section
-st.header("Venturi Meter Notes")
-
-tab1, tab2, tab3 = st.tabs(["Concept", "Derivation", "Key Insights"])
-
-with tab1:
-    st.subheader("What is a Venturi Meter?")
-
-    st.markdown("""Venturimeter is a flow meter device or instrument that is used to measure the flow rate (discharge) in a pipe. The venturi meter is used in the water supply industry and It works on the basis of the Bernoulli theorem. The venturi meter is invented by Clemans Herchel who was an American Hydraulic engineer.
+elif menu =="Notes":
+    st.header("Venturi Meter Notes")
+    
+    tab1, tab2, tab3 = st.tabs(["Concept", "Derivation", "Key Insights"])
+    
+    with tab1:
+        st.subheader("What is a Venturi Meter?")
+        
+        st.markdown("""Venturimeter is a flow meter device or instrument that is used to measure the flow rate (discharge) in a pipe. The venturi meter is used in the water supply industry and It works on the basis of the Bernoulli theorem. The venturi meter is invented by Clemans Herchel who was an American Hydraulic engineer.
 """)
-
-    st.markdown("### Venturi Meter")
-
-    st.image("https://upload.wikimedia.org/wikipedia/commons/3/3d/Venturi_tube_diagram.svg")
-
-    st.markdown("""
+        st.markdown("### Venturi Meter")
+        
+        st.image("https://upload.wikimedia.org/wikipedia/commons/3/3d/Venturi_tube_diagram.svg")
+        
+        st.markdown("""
 ### Venturi Meter Types:
 There are four different types of venturi tubes and those are:
 
@@ -171,113 +172,102 @@ Venturi meter has been divided into three parts such as:
 2. Throat Diameter and
 3. Diverging Side
 """)
-
-    st.info("💡Remember: Velocity ↑ ⇒ Pressure ↓ (Bernoulli Principle)")
-
-with tab2:
-    st.subheader("🧮 Step-by-Step Derivation")
-
-    st.markdown("### 1. Continuity Equation")
-    st.latex(r"A_1 v_1 = A_2 v_2")
-
-    st.markdown("""
+        st.info("Remember: Velocity ↑ ⇒ Pressure ↓ (Bernoulli Principle)")
+        
+        with tab2:
+            
+            st.subheader("Step-by-Step Derivation")
+            st.markdown("### 1. Continuity Equation")
+            st.latex(r"A_1 v_1 = A_2 v_2")
+            st.markdown("""
 This means flow is conserved:
 - If area decreases → velocity must increase
 """)
-
-    st.markdown("### 2. Bernoulli’s Equation")
-    st.latex(r"P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2")
-
-    st.markdown("### 3. Rearranging")
-
-    st.latex(r"P_1 - P_2 = \frac{1}{2}\rho (v_2^2 - v_1^2)")
-
-    st.markdown("### 4. Substitute using Continuity")
-
-    st.latex(r"v_1 = \frac{A_2}{A_1} v_2")
-
-    st.markdown("### 5. Final Formula")
-
-    st.latex(r"v_2 = \sqrt{\frac{2\Delta P}{\rho\left(\left(\frac{A_1}{A_2}\right)^2 - 1\right)}}")
-
-    st.success("Formula used!")
+            st.markdown("### 2. Bernoulli’s Equation")
+            st.latex(r"P_1 + \frac{1}{2}\rho v_1^2 = P_2 + \frac{1}{2}\rho v_2^2")
+            
+            st.markdown("### 3. Rearranging")
+            st.latex(r"P_1 - P_2 = \frac{1}{2}\rho (v_2^2 - v_1^2)")
+            
+            st.markdown("### 4. Substitute using Continuity")
+            st.latex(r"v_1 = \frac{A_2}{A_1} v_2")
+            
+            st.markdown("### 5. Final Formula")
+            st.latex(r"v_2 = \sqrt{\frac{2\Delta P}{\rho\left(\left(\frac{A_1}{A_2}\right)^2 - 1\right)}}")
+            
+            st.success("This is the formula used!")
 
 #Quiz Section
-
-st.header("Quiz")
-
-if "score" not in st.session_state:
-    st.session_state.score = 0
-if "attempted" not in st.session_state:
-    st.session_state.attempted = 0
-if "weak_topics" not in st.session_state:
-    st.session_state.weak_topics = []
-
-#Question Bank
-quiz_data = {
-    "Easy": [
-        {
-            "q": "Where is velocity maximum?",
-            "options": ["Inlet", "Throat", "Outlet"],
-            "answer": "Throat",
-            "topic": "Concept"
-        },
-        {
-            "q": "Pressure is lowest at?",
-            "options": ["Inlet", "Throat", "Outlet"],
-            "answer": "Throat",
-            "topic": "Concept"
-        }
-    ],
-    "Medium": [
-        {
-            "q": "Which equation ensures flow conservation?",
-            "options": ["Bernoulli", "Continuity", "Newton's Law"],
-            "answer": "Continuity",
-            "topic": "Theory"
-        },
-        {
-            "q": "If diameter decreases, velocity will?",
-            "options": ["Decrease", "Increase", "Remain same"],
-            "answer": "Increase",
-            "topic": "Concept"
-        }
-    ],
-    "Hard": [
-        {
-            "q": "If pressure difference increases, velocity will?",
-            "options": ["Decrease", "Increase", "Remain same"],
-            "answer": "Increase",
-            "topic": "Application"
-        },
-        {
-            "q": "Velocity depends on which factors?",
-            "options": ["Pressure difference & density", "Only diameter", "Only pressure"],
-            "answer": "Pressure difference & density",
-            "topic": "Formula"
-        }
-    ]
-}
-difficulty = st.selectbox("Select Difficulty Level", ["Easy", "Medium", "Hard"])
-
-questions = quiz_data[difficulty]
-
-#quiz loop
-for i, q in enumerate(questions):
-    st.subheader(f"Q{i+1}: {q['q']}")
-
-    user_ans = st.radio(f"Select answer {i}", q["options"], key=f"{difficulty}_{i}")
-
-    if st.button(f"Submit Q{i+1}", key=f"btn_{difficulty}_{i}"):
-
-        st.session_state.attempted += 1
-
-        if user_ans == q["answer"]:
-            st.success("Correct!")
-            st.session_state.score += 1
-        else:
-            st.error(f"Wrong! Correct answer: {q['answer']}")
-            st.session_state.weak_topics.append(q["topic"])
+elif menu == "quiz":
+    st.header("Quiz")
+    if "score" not in st.session_state:
+        st.session_state.score = 0
+    if "attempted" not in st.session_state:
+        st.session_state.attempted = 0
+    if "weak_topics" not in st.session_state:
+        st.session_state.weak_topics = []
+        
+    #Question Bank
+    quiz_data = {
+        "Easy": [
+            {
+                "q": "Where is velocity maximum?",
+                "options": ["Inlet", "Throat", "Outlet"],
+                "answer": "Throat",
+                "topic": "Concept"
+            },
+            {
+                "q": "Pressure is lowest at?",
+                "options": ["Inlet", "Throat", "Outlet"],
+                "answer": "Throat",
+                "topic": "Concept"
+            }
+        ],
+        "Medium": [
+            {
+                "q": "Which equation ensures flow conservation?",
+                "options": ["Bernoulli", "Continuity", "Newton's Law"],
+                "answer": "Continuity",
+                "topic": "Theory"
+            },
+            {
+                "q": "If diameter decreases, velocity will?",
+                "options": ["Decrease", "Increase", "Remain same"],
+                "answer": "Increase",
+                "topic": "Concept"
+            }
+        ],
+        "Hard": [
+            {
+                "q": "If pressure difference increases, velocity will?",
+                "options": ["Decrease", "Increase", "Remain same"],
+                "answer": "Increase",
+                "topic": "Application"
+            },
+            {
+                "q": "Velocity depends on which factors?",
+                "options": ["Pressure difference & density", "Only diameter", "Only pressure"],
+                "answer": "Pressure difference & density",
+                "topic": "Formula"
+            }
+        ]
+    }
+    difficulty = st.selectbox("Select Difficulty Level", ["Easy", "Medium", "Hard"])
+    questions = quiz_data[difficulty]
+    #quiz loop
+    for i, q in enumerate(questions):
+        st.subheader(f"Q{i+1}: {q['q']}")
+        user_ans = st.radio(f"Select answer {i}", q["options"], key=f"{difficulty}_{i}")
+        
+        if st.button(f"Submit Q{i+1}", key=f"btn_{difficulty}_{i}"):
+            st.session_state.attempted += 1
+            
+            if user_ans == q["answer"]:
+                st.success("Correct!")
+                st.session_state.score += 1
+            else:
+                st.error(f"Wrong! Correct answer: {q['answer']}")
+                st.session_state.weak_topics.append(q["topic"])
 
 #scoreboard
 st.subheader("Score Board")
@@ -290,7 +280,7 @@ if st.session_state.attempted > 0:
     st.metric("Accuracy", f"{accuracy:.2f}%")
 
 #Weak topic analysis
-st.subheader("📉 Weak Topic Analysis")
+st.subheader("Weak Topic Analysis")
 
 if st.session_state.weak_topics:
     weak_summary = {}
@@ -307,7 +297,7 @@ if st.session_state.weak_topics:
         st.warning(f"{topic} (mistakes: {count})")
 
 else:
-    st.success("Great! No weak topics so far 🎉")
+    st.success("Great! No weak topics so far")
 
 
 if st.button("Reset Quiz"):
@@ -315,58 +305,3 @@ if st.button("Reset Quiz"):
     st.session_state.attempted = 0
     st.session_state.weak_topics = []
     st.experimental_rerun()
-
-for i, q in enumerate(questions):
-    st.subheader(f"Q{i+1}: {q['q']}")
-    user_ans = st.radio("Choose:", q["options"], key=f"{difficulty}_{i}")
-
-    submitted = st.button(f"Submit Q{i+1}", key=f"btn_{difficulty}_{i}")
-
-    if submitted and i not in st.session_state.answered:
-        st.session_state.attempted += 1
-
-        if user_ans == q["answer"]:
-            st.success("Correct!")
-            st.session_state.score += 1
-        else:
-            st.error(f"Wrong! Correct: {q['answer']}")
-            st.session_state.weak_topics.append(q["topic"])
-
-        st.session_state.answered.add(i)
-
-
-# -------- SCORE --------
-
-st.subheader("📊 Score Board")
-
-st.metric("Score", st.session_state.score)
-st.metric("Attempted", st.session_state.attempted)
-
-if st.session_state.attempted > 0:
-    acc = (st.session_state.score / st.session_state.attempted) * 100
-    st.metric("Accuracy", f"{acc:.2f}%")
-
-
-# -------- WEAK TOPICS --------
-
-st.subheader("📉 Weak Topic Analysis")
-
-if st.session_state.weak_topics:
-    summary = {}
-    for t in st.session_state.weak_topics:
-        summary[t] = summary.get(t, 0) + 1
-
-    for t, c in summary.items():
-        st.warning(f"{t} (mistakes: {c})")
-else:
-    st.success("No weak topics 🎉")
-
-
-# -------- RESET --------
-
-if st.button("Reset Quiz"):
-    st.session_state.score = 0
-    st.session_state.attempted = 0
-    st.session_state.weak_topics = []
-    st.session_state.answered = set()
-    st.rerun()
