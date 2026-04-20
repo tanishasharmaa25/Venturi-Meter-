@@ -116,7 +116,7 @@ def plot_velocity_graph(v1, v2):
 
 # ---------------- UI ----------------
 
-st.title("🚀 Venturi Meter Flow Simulation")
+st.title(" Venturi Meter Flow Simulation")
 
 col1, col2 = st.columns([1, 2])
 
@@ -138,7 +138,7 @@ with col1:
 
 # -------- SIMULATION --------
 with col2:
-    st.subheader("🌊 Simulation")
+    st.subheader(" Simulation")
 
     animate(d1, d2, v1, v2)
 
