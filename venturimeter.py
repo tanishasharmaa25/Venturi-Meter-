@@ -45,13 +45,12 @@ def pressurecolour(x):
 def animate(d1, d2, v1, v2):
     x, y = venturishape(d1, d2)
 
-    fig, ax = plt.subplots()
-    placeholder = st.empty()
 
+    placeholder = st.empty()
     particles = np.linspace(0, 10, 30)
 
     for frame in range(80):
-        ax.clear()
+        fig, ax = plt.subplots()
 
         # Pipe walls
         ax.plot(x, y, color="black")
@@ -67,11 +66,11 @@ def animate(d1, d2, v1, v2):
             pos = particles[i]
 
             if pos < 3:
-                pos += v1 * 0.02
+                pos += v1 * 0.05
             elif 3 <= pos <= 7:
-                pos += v2 * 0.02
+                pos += v2 * 0.05
             else:
-                pos += v1 * 0.02
+                pos += v1 * 0.05
 
             if pos > 10:
                 pos = 0
@@ -84,7 +83,7 @@ def animate(d1, d2, v1, v2):
         ax.set_title("Venturi Flow Simulation")
 
         placeholder.pyplot(fig)
-        time.sleep(0.05)
+        time.sleep(0.02)
 
 #Velocity Graph
 def plot_velocity_graph(v1, v2):
@@ -144,7 +143,7 @@ if menu == "Simulation":
 elif menu =="Notes":
     st.header("Venturi Meter Notes")
     
-    tab1, tab2, tab3 = st.tabs(["Concept", "Derivation"])
+    tab1, tab2= st.tabs(["Concept", "Derivation"])
     
     with tab1:
         st.subheader("What is a Venturi Meter?")
@@ -209,13 +208,13 @@ elif menu == "Quiz":
     quiz_data = {
         "Easy": [
             {
-                "Q": "Where is velocity maximum?",
+                "q": "Where is velocity maximum?",
                 "options": ["Inlet", "Throat", "Outlet"],
                 "answer": "Throat",
                 "topic": "Concept"
             },
             {
-                "Q": "Pressure is lowest at?",
+                "q": "Pressure is lowest at?",
                 "options": ["Inlet", "Throat", "Outlet"],
                 "answer": "Throat",
                 "topic": "Concept"
@@ -223,13 +222,13 @@ elif menu == "Quiz":
         ],
         "Medium": [
             {
-                "Q": "Which equation ensures flow conservation?",
+                "q": "Which equation ensures flow conservation?",
                 "options": ["Bernoulli", "Continuity", "Newton's Law"],
                 "answer": "Continuity",
                 "topic": "Theory"
             },
             {
-                "Q": "If diameter decreases, velocity will?",
+                "q": "If diameter decreases, velocity will?",
                 "options": ["Decrease", "Increase", "Remain same"],
                 "answer": "Increase",
                 "topic": "Concept"
@@ -237,7 +236,7 @@ elif menu == "Quiz":
         ],
         "Hard": [
             {
-                "Q": "If pressure difference increases, velocity will?",
+                "q": "If pressure difference increases, velocity will?",
                 "options": ["Decrease", "Increase", "Remain same"],
                 "answer": "Increase",
                 "topic": "Application"
@@ -290,8 +289,8 @@ elif menu == "Quiz":
         else:
             st.success("Great! No weak topics so far")
             #Reset button
-        if st.button("Reset Quiz"):
-            st.session_state.score = 0
-            st.session_state.attempted = 0
-            st.session_state.weak_topics = []
-            st.experimental_rerun()
+    if st.button("Reset Quiz"):
+        st.session_state.score = 0
+        st.session_state.attempted = 0
+        st.session_state.weak_topics = []
+        st.experimental_rerun()
