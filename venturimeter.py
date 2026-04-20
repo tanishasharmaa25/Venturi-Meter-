@@ -144,7 +144,7 @@ if menu == "Simulation":
 elif menu =="Notes":
     st.header("Venturi Meter Notes")
     
-    tab1, tab2, tab3 = st.tabs(["Concept", "Derivation", "Key Insights"])
+    tab1, tab2, tab3 = st.tabs(["Concept", "Derivation"])
     
     with tab1:
         st.subheader("What is a Venturi Meter?")
@@ -209,13 +209,13 @@ elif menu == "Quiz":
     quiz_data = {
         "Easy": [
             {
-                "q": "Where is velocity maximum?",
+                "Q": "Where is velocity maximum?",
                 "options": ["Inlet", "Throat", "Outlet"],
                 "answer": "Throat",
                 "topic": "Concept"
             },
             {
-                "q": "Pressure is lowest at?",
+                "Q": "Pressure is lowest at?",
                 "options": ["Inlet", "Throat", "Outlet"],
                 "answer": "Throat",
                 "topic": "Concept"
@@ -223,13 +223,13 @@ elif menu == "Quiz":
         ],
         "Medium": [
             {
-                "q": "Which equation ensures flow conservation?",
+                "Q": "Which equation ensures flow conservation?",
                 "options": ["Bernoulli", "Continuity", "Newton's Law"],
                 "answer": "Continuity",
                 "topic": "Theory"
             },
             {
-                "q": "If diameter decreases, velocity will?",
+                "Q": "If diameter decreases, velocity will?",
                 "options": ["Decrease", "Increase", "Remain same"],
                 "answer": "Increase",
                 "topic": "Concept"
@@ -237,13 +237,13 @@ elif menu == "Quiz":
         ],
         "Hard": [
             {
-                "q": "If pressure difference increases, velocity will?",
+                "Q": "If pressure difference increases, velocity will?",
                 "options": ["Decrease", "Increase", "Remain same"],
                 "answer": "Increase",
                 "topic": "Application"
             },
             {
-                "q": "Velocity depends on which factors?",
+                "Q": "Velocity depends on which factors?",
                 "options": ["Pressure difference & density", "Only diameter", "Only pressure"],
                 "answer": "Pressure difference & density",
                 "topic": "Formula"
@@ -257,7 +257,7 @@ elif menu == "Quiz":
         st.subheader(f"Q{i+1}: {q['q']}")
         user_ans = st.radio(f"Select answer {i}", q["options"], key=f"{difficulty}_{i}")
         
-        if st.button(f"Submit Q{i+1}", key=f"btn_{difficulty}_{i}"):
+        if st.button(f"Submit", key=f"btn_{difficulty}_{i}"):
             st.session_state.attempted += 1
             
             if user_ans == q["answer"]:
@@ -275,7 +275,7 @@ elif menu == "Quiz":
         accuracy = (st.session_state.score / st.session_state.attempted) * 100
         st.metric("Accuracy", f"{accuracy:.2f}%")
         
-        # Weak topic analysis
+        #Weak topic analysis
         st.subheader("Weak Topic Analysis")
         if st.session_state.weak_topics:
             weak_summary = {}
@@ -289,7 +289,7 @@ elif menu == "Quiz":
                 st.warning(f"{topic} (mistakes: {count})")
         else:
             st.success("Great! No weak topics so far")
-            # Reset button
+            #Reset button
         if st.button("Reset Quiz"):
             st.session_state.score = 0
             st.session_state.attempted = 0
