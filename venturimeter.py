@@ -6,10 +6,9 @@ import time
 st.set_page_config(layout="wide")
 
 # =========================
-# CLASS 1: VENTURI METER
+# VENTURI CLASS
 # =========================
 class VenturiMeter:
-    
     def __init__(self, d1, d2):
         self.d1 = d1
         self.d2 = d2
@@ -22,7 +21,6 @@ class VenturiMeter:
 
     def shape(self):
         x = np.linspace(0, 10, 400)
-
         y = np.piecewise(
             x,
             [x < 3, (x >= 3) & (x <= 7), x > 7],
@@ -36,19 +34,17 @@ class VenturiMeter:
 
 
 # =========================
-# CLASS 2: FLUID
+# FLUID CLASS
 # =========================
 class Fluid:
-    
-    def __init__(self, density):
-        self.rho = density
+    def __init__(self, rho):
+        self.rho = rho
 
 
 # =========================
-# CLASS 3: FLOW CALCULATOR
+# FLOW CALCULATOR
 # =========================
 class FlowCalculator:
-    
     def __init__(self, venturi, fluid, dp):
         self.venturi = venturi
         self.fluid = fluid
@@ -63,103 +59,100 @@ class FlowCalculator:
 
         return v1, v2
 
-    def pressure_distribution(self, x, v1, v2):
-        pressure = []
-
+    def pressure(self, x, v1, v2):
+        p = []
         for xi in x:
             if xi < 3 or xi > 7:
                 v = v1
             else:
                 v = v2
-
-            P = 0.5 * self.fluid.rho * (v1**2 - v**2)
-            pressure.append(P)
-
-        return np.array(pressure)
+            p.append(0.5 * self.fluid.rho * (v1**2 - v**2))
+        return np.array(p)
 
 
 # =========================
-# CLASS 4: SIMULATION
+# SIMULATION
 # =========================
 class Simulation:
-    
-    def __init__(self, venturi, flow_calc):
+    def __init__(self, venturi, flow):
         self.venturi = venturi
-        self.flow_calc = flow_calc
+        self.flow = flow
 
     def animate(self, v1, v2):
         x, y = self.venturi.shape()
-        pressure = self.flow_calc.pressure_distribution(x, v1, v2)
+        pressure = self.flow.pressure(x, v1, v2)
 
         placeholder = st.empty()
 
-        # 🔥 WATER LAYERS (continuous flow)
-        layers_y = np.linspace(-self.venturi.d1/2, self.venturi.d1/2, 20)
-        offsets = np.zeros(len(layers_y))
+        # 🔥 DENSE PARTICLES = FLUID BODY
+        n = 2000
+        px = np.random.uniform(0, 10, n)
+        py = np.random.uniform(-self.venturi.d1/2, self.venturi.d1/2, n)
 
-        for frame in range(150):
+        for frame in range(200):
             fig, ax = plt.subplots(figsize=(18,6))
 
-            # Pipe walls
+            # Pipe
             ax.plot(x, y, color='black', linewidth=2)
             ax.plot(x, -y, color='black', linewidth=2)
 
             # Pressure gradient
-            norm = (pressure - pressure.min()) / (pressure.max() - pressure.min())
+            norm = (pressure - pressure.min())/(pressure.max()-pressure.min())
 
             for i in range(len(x)-1):
-                ax.fill_between(
-                    [x[i], x[i+1]],
-                    y[i],
-                    -y[i],
-                    color=plt.cm.coolwarm(norm[i]),
-                    alpha=0.4
-                )
+                ax.fill_between([x[i], x[i+1]],
+                                y[i], -y[i],
+                                color=plt.cm.coolwarm(norm[i]),
+                                alpha=0.25)
 
-            # 🔥 FLOWING WATER (REAL VISUAL)
-            for i, y_layer in enumerate(layers_y):
+            # 🔥 MOVE FLUID
+            for i in range(n):
+                xi = px[i]
+                yi = py[i]
 
-                offsets[i] += 0.05
+                # stay inside pipe
+                r = np.interp(xi, x, y)
+                if abs(yi) > r:
+                    py[i] = np.random.uniform(-r, r)
 
-                wave = 0.02 * np.sin(5 * x + offsets[i])
+                # velocity variation
+                if xi < 3 or xi > 7:
+                    vx = v1
+                else:
+                    vx = v2
 
-                velocity_profile = np.where((x < 3) | (x > 7), v1, v2)
+                # move
+                px[i] += vx * 0.04
 
-                flow_x = x + velocity_profile * offsets[i]
+                # wrap
+                if px[i] > 10:
+                    px[i] = 0
+                    py[i] = np.random.uniform(-self.venturi.d1/2, self.venturi.d1/2)
 
-                ax.plot(flow_x, y_layer + wave,
-                        color='white',
-                        linewidth=1.2,
-                        alpha=0.7)
+            # 🔥 DRAW FLUID MASS (this is key)
+            ax.scatter(px, py, s=1, color='white', alpha=0.6)
 
             ax.set_xlim(0, 10)
             ax.set_ylim(-self.venturi.d1, self.venturi.d1)
-
             ax.axis('off')
-            ax.set_title("Water Flow Through Venturi Meter", fontsize=18)
+
+            ax.set_title("Flowing Water Through Venturi", fontsize=18)
 
             plt.tight_layout()
-            placeholder.pyplot(fig, use_container_width=True)
-            time.sleep(0.03)
+            placeholder.pyplot(fig)
+            time.sleep(0.01)
 
-    def velocity_graph(self, v1, v2):
+    def graph(self, v1, v2):
         x = np.linspace(0, 10, 200)
-        velocity = []
+        vel = [v1 if (xi < 3 or xi > 7) else v2 for xi in x]
 
-        for xi in x:
-            if xi < 3 or xi > 7:
-                velocity.append(v1)
-            else:
-                velocity.append(v2)
+        fig, ax = plt.subplots(figsize=(10,4))
+        ax.plot(x, vel, linewidth=3)
 
-        fig, ax = plt.subplots(figsize=(12,5))
-
-        ax.plot(x, velocity, linewidth=3)
-
-        ax.set_title("Velocity Distribution Along Venturi Meter")
-        ax.set_xlabel("Length of Pipe")
-        ax.set_ylabel("Velocity (m/s)")
-        ax.grid(True, linestyle='--', alpha=0.5)
+        ax.set_title("Velocity Along Pipe")
+        ax.set_xlabel("Length")
+        ax.set_ylabel("Velocity")
+        ax.grid(True)
 
         return fig
 
@@ -167,17 +160,15 @@ class Simulation:
 # =========================
 # UI
 # =========================
-st.title("Venturi Meter Flow Simulation (OOP)")
+st.title("Venturi Meter Flow (Best Possible Streamlit Simulation)")
 
 col1, col2 = st.columns([1,2])
 
 with col1:
-    st.subheader("Controls")
-
     d1 = st.slider("Inlet Diameter", 0.3, 1.0, 0.6)
     d2 = st.slider("Throat Diameter", 0.1, 0.5, 0.3)
     dp = st.slider("Pressure Difference", 100, 5000, 1500)
-    rho = st.slider("Fluid Density", 500, 1500, 1000)
+    rho = st.slider("Density", 500, 1500, 1000)
 
     venturi = VenturiMeter(d1, d2)
     fluid = Fluid(rho)
@@ -186,32 +177,11 @@ with col1:
 
     v1, v2 = flow.velocity()
 
-    st.metric("Inlet Velocity", f"{v1:.2f} m/s")
-    st.metric("Throat Velocity", f"{v2:.2f} m/s")
+    st.metric("Inlet Velocity", f"{v1:.2f}")
+    st.metric("Throat Velocity", f"{v2:.2f}")
 
-    st.markdown("### 🔵 High Pressure | 🔴 Low Pressure")
-
-    if st.button("Start Simulation"):
+    if st.button("Start Flow"):
         sim.animate(v1, v2)
 
 with col2:
-    st.subheader("Velocity Graph")
-    fig = sim.velocity_graph(v1, v2)
-    st.pyplot(fig)
-    flow = FlowCalculator(venturi, fluid, dp)
-    sim = Simulation(venturi, flow)
-
-    v1, v2 = flow.velocity()
-
-    st.metric("Inlet Velocity", f"{v1:.2f} m/s")
-    st.metric("Throat Velocity", f"{v2:.2f} m/s")
-
-    st.markdown("### 🔵 High Pressure | 🔴 Low Pressure")
-
-    if st.button("Start Simulation"):
-        sim.animate(v1, v2)
-
-with col2:
-    st.subheader("Velocity Graph")
-    fig = sim.velocity_graph(v1, v2)
-    st.pyplot(fig)
+    st.pyplot(sim.graph(v1, v2))
