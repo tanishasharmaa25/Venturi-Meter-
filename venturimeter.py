@@ -193,9 +193,7 @@ elif menu =="Notes":
         
         st.markdown("""Venturimeter is a flow meter device or instrument that is used to measure the flow rate in a pipe. The venturi meter is used in the water supply industry and It works on the basis of the Bernoulli theorem. The venturi meter is invented by Clemans Herchel who was an American Hydraulic engineer.
 """)
-        st.markdown("### Venturi Meter")"C:\Users\admin\Downloads\Venturi.jpg"
-        
-        st.image("C:\Users\admin\Downloads\Venturi.jpg")
+        st.markdown("### Venturi Meter")
         
         st.markdown("""
 ### Venturi Meter Types:
