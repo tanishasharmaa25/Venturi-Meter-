@@ -34,9 +34,8 @@ class FlowSimulator:
         r = self.venturi.radius(x)
         A = self.area(r)
 
-        r2 = self.venturi.d2 / 2
-        A2 = self.area(r2)
         A1 = self.area(self.venturi.d1 / 2)
+        A2 = self.area(self.venturi.d2 / 2)
 
         v2 = np.sqrt((2*self.dp)/(self.rho*((A1/A2)**2 - 1)))
         return v2 * (A2 / A)
@@ -50,52 +49,61 @@ def animate():
 
     placeholder = st.empty()
 
-    x = np.linspace(0, 10, 400)
-    y_lines = np.linspace(-d1/2, d1/2, 25)
+    x = np.linspace(0, 10, 300)
+    y_lines = np.linspace(-d1/2, d1/2, 20)
 
     phase = 0
 
-    for _ in range(200):
+    for _ in range(150):
         fig, ax = plt.subplots(figsize=(16,5))
 
-        y_top = [venturi.radius(xi) for xi in x]
-        y_bottom = [-y for y in y_top]
+        # Venturi shape
+        y_top = np.array([venturi.radius(xi) for xi in x])
+        y_bottom = -y_top
 
-        # Draw pipe
         ax.plot(x, y_top, color="black", linewidth=2)
         ax.plot(x, y_bottom, color="black", linewidth=2)
 
-        # STREAMLINES (REAL FLOW LOOK)
+        # STREAMLINES
         for y0 in y_lines:
-            y_stream = []
             x_stream = []
+            y_stream = []
+            colors = []
 
             for xi in x:
                 r = venturi.radius(xi)
-                if abs(y0) < r:
+
+                if abs(y0) <= r:  # only inside pipe
                     v = flow.velocity(xi)
 
-                    # phase shift creates motion illusion
-                    xi_shift = xi + (phase * v * 0.02)
-
-                    x_stream.append(xi_shift % 10)
+                    x_stream.append(xi)
                     y_stream.append(y0)
+                    colors.append(v)
 
-            velocities = [flow.velocity(xi) for xi in x_stream]
+            if len(x_stream) > 1:  # avoid crash
+                ax.plot(
+                    x_stream,
+                    y_stream,
+                    color=plt.cm.plasma(np.mean(colors)/max(colors)),
+                    linewidth=1.5,
+                    alpha=0.8
+                )
 
-            ax.plot(
-                x_stream,
-                y_stream,
-                color=plt.cm.plasma(np.mean(velocities)/max(velocities)),
-                linewidth=1.5,
-                alpha=0.8
-            )
+        # fake motion effect using shifting overlay
+        for shift in np.linspace(0, 0.3, 5):
+            for y0 in y_lines[::2]:
+                xs = x + (phase * 0.02 + shift)
+                ys = np.full_like(xs, y0)
+
+                mask = np.abs(ys) <= np.array([venturi.radius(xi) for xi in xs])
+
+                ax.plot(xs[mask], ys[mask], color="cyan", alpha=0.05)
 
         phase += 1
 
         ax.set_xlim(0, 10)
         ax.set_ylim(-d1/2 - 0.2, d1/2 + 0.2)
-        ax.set_title("Venturi Meter – Visible Fluid Flow")
+        ax.set_title("Venturi Flow (Continuous Visible Streamlines)")
         ax.axis("off")
 
         placeholder.pyplot(fig)
@@ -106,7 +114,7 @@ def animate():
 
 # ------------------ UI ------------------
 
-st.title("Venturi Meter (Real Flow Visualization)")
+st.title("Venturi Meter Flow Simulation")
 
 d1 = st.sidebar.slider("Inlet Diameter", 1.0, 5.0, 3.0)
 d2 = st.sidebar.slider("Throat Diameter", 0.5, 3.0, 1.5)
