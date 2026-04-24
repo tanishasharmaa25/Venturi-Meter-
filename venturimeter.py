@@ -64,7 +64,7 @@ class FlowSimulator:
 
         return v1, v2
 
-    # Velocity distribution along pipe
+    # Velocity field along pipe
     def velocity_field(self):
         x, y = self.venturi.shape()
         A1, _ = self.venturi.get_areas()
@@ -74,68 +74,77 @@ class FlowSimulator:
 
         return x, y, v_x
 
-    # Smooth animation
+    # FINAL REALISTIC ANIMATION
     def animate(self):
         x, y, v_x = self.velocity_field()
+
         placeholder = st.empty()
 
-        num_particles = 400
+        num_particles = 600
         px = np.random.uniform(0, 10, num_particles)
         py = np.random.uniform(-self.venturi.d1 / 2, self.venturi.d1 / 2, num_particles)
 
-        dt = 0.03
+        dt = 0.02
 
-        for frame in range(200):
-            fig, ax = plt.subplots(figsize=(20, 8))
+        fig, ax = plt.subplots(figsize=(20, 8))
 
-            # Pipe
-            ax.plot(x, y, color="black", linewidth=2)
-            ax.plot(x, -y, color="black", linewidth=2)
+        # Pipe walls
+        ax.plot(x, y, color="black", linewidth=2)
+        ax.plot(x, -y, color="black", linewidth=2)
 
-            # Normalize velocity
-            v_norm = (v_x - np.min(v_x)) / (np.max(v_x) - np.min(v_x))
+        scatter = ax.scatter(px, py, s=5)
 
-            # Background field
-            ax.imshow(
-                np.tile(v_norm, (200, 1)),
-                extent=[0, 10, -self.venturi.d1, self.venturi.d1],
-                origin='lower',
-                cmap='viridis',
-                alpha=0.4,
-                aspect='auto'
-            )
+        ax.set_xlim(0, 10)
+        ax.set_ylim(-self.venturi.d1, self.venturi.d1)
+        ax.set_title("Realistic Venturi Flow", fontsize=18)
+        ax.axis("off")
 
-            # Particle motion
+        for frame in range(250):
+
+            colors = []
+
             for i in range(num_particles):
                 idx = np.searchsorted(x, px[i])
                 idx = np.clip(idx, 1, len(x)-1)
 
+                # interpolate velocity
                 x1, x2 = x[idx-1], x[idx]
                 v1, v2 = v_x[idx-1], v_x[idx]
-
                 v_local = v1 + (v2 - v1) * ((px[i] - x1) / (x2 - x1))
 
+                # amplify for visibility
+                v_local *= 2.5
+
+                # laminar profile
+                radius = y[idx]
+                if radius != 0:
+                    profile = (1 - (py[i]/radius)**2)
+                else:
+                    profile = 1
+
+                v_local *= profile
+
+                # move particle
                 px[i] += v_local * dt
 
                 if px[i] > 10:
                     px[i] = 0
                     py[i] = np.random.uniform(-self.venturi.d1/2, self.venturi.d1/2)
 
+                # stay inside pipe
                 y_limit = np.interp(px[i], x, y)
-
                 if abs(py[i]) > y_limit:
                     py[i] = np.sign(py[i]) * y_limit * 0.95
 
-                color_val = (v_local - np.min(v_x)) / (np.max(v_x) - np.min(v_x))
-                ax.scatter(px[i], py[i], color=plt.cm.viridis(color_val), s=6)
+                # color based on velocity
+                norm = (v_local - np.min(v_x)) / (np.max(v_x) - np.min(v_x))
+                colors.append(plt.cm.plasma(norm))
 
-            ax.set_xlim(0, 10)
-            ax.set_ylim(-self.venturi.d1, self.venturi.d1)
-            ax.set_title("Venturi Flow (OOP Simulation)", fontsize=18)
-            ax.axis("off")
+            scatter.set_offsets(np.c_[px, py])
+            scatter.set_color(colors)
 
             placeholder.pyplot(fig, use_container_width=True)
-            time.sleep(0.02)
+            time.sleep(0.01)
 
     # Velocity graph
     def plot_graph(self):
@@ -156,6 +165,7 @@ class FlowSimulator:
 # -------------------------
 
 menu = st.sidebar.selectbox("Select Section", ["Simulation", "Notes", "Quiz"])
+
 
 # -------------------------
 # SIMULATION
