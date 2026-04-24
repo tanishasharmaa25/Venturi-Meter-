@@ -152,7 +152,6 @@ class Simulation:
             ax.set_xlabel("Length of Pipe")
             ax.set_ylabel("Velocity (m/s)")
             ax.grid(True, linestyle='--', alpha=0.5)
-
     return fig
 #UI
 menu = st.sidebar.selectbox("Select Section", ["Simulation", "Notes", "Quiz"])
