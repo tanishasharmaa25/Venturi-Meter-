@@ -179,9 +179,8 @@ if menu == "Simulation":
         st.metric("Throat Velocity", f"{v2:.2f}")
         if st.button("Start Flow"):
             sim.animate(v1, v2)
-
-with col2:
-    st.pyplot(sim.graph(v1, v2))
+    with col2:
+        st.pyplot(sim.graph(v1, v2))
              
 #Notes Section
 elif menu =="Notes":
