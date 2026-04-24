@@ -35,13 +35,13 @@ class Fluid:
     def __init__(self, rho):
         self.rho = rho
         
-#Class 3: FluidCalculator
-class FluidCalculator:
+#Class 3: FlowCalculator
+class FlowCalculator:
     def __init__(self, venturi, fluid, dp):
         self.venturi = venturi
         self.fluid = fluid
         self.dp = dp
-
+    
     def velocity(self):
         A1, A2 = self.venturi.get_areas()
         rho = self.fluid.rho
@@ -136,23 +136,22 @@ class Simulation:
             v = (A1 * v1) / A       # continuity equation
             velocity.append(v)
             
-            velocity = np.array(velocity)
+        velocity = np.array(velocity)
             
-            fig, ax = plt.subplots(figsize=(12,5))
+        fig, ax = plt.subplots(figsize=(12,5))
+        ax.plot(x, velocity, linewidth=3)
             
-            ax.plot(x, velocity, linewidth=3)
-            
-            # Highlight regions
-            ax.axvline(3, linestyle='--')
-            ax.axvline(7, linestyle='--')
-            ax.text(1.5, max(velocity)*0.9, "Inlet", ha='center')
-            ax.text(5, max(velocity)*0.95, "Throat", ha='center')
-            ax.text(8.5, max(velocity)*0.9, "Outlet", ha='center')
-            ax.set_title("Velocity Distribution in Venturi Meter")
-            ax.set_xlabel("Length of Pipe")
-            ax.set_ylabel("Velocity (m/s)")
-            ax.grid(True, linestyle='--', alpha=0.5)
-    return fig
+        # Highlight regions
+        ax.axvline(3, linestyle='--')
+        ax.axvline(7, linestyle='--')
+        ax.text(1.5, max(velocity)*0.9, "Inlet", ha='center')
+        ax.text(5, max(velocity)*0.95, "Throat", ha='center')
+        ax.text(8.5, max(velocity)*0.9, "Outlet", ha='center')
+        ax.set_title("Velocity Distribution in Venturi Meter")
+        ax.set_xlabel("Length of Pipe")
+        ax.set_ylabel("Velocity (m/s)")
+        ax.grid(True, linestyle='--', alpha=0.5)
+        return fig
 #UI
 menu = st.sidebar.selectbox("Select Section", ["Simulation", "Notes", "Quiz"])
 if menu == "Simulation":
@@ -178,8 +177,9 @@ if menu == "Simulation":
         st.metric("Throat Velocity", f"{v2:.2f}")
         if st.button("Start Flow"):
             sim.animate(v1, v2)
+            
     with col2:
-        st.pyplot(sim.graph(v1, v2))
+        st.pyplot(sim.velocity_graph(v1))
              
 #Notes Section
 elif menu =="Notes":
@@ -193,6 +193,7 @@ elif menu =="Notes":
         st.markdown("""Venturimeter is a flow meter device or instrument that is used to measure the flow rate in a pipe. The venturi meter is used in the water supply industry and It works on the basis of the Bernoulli theorem. The venturi meter is invented by Clemans Herchel who was an American Hydraulic engineer.
 """)
         st.markdown("### Venturi Meter")
+       
         
         st.markdown("""
 ### Venturi Meter Types:
