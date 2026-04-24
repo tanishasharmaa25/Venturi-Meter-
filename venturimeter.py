@@ -5,7 +5,7 @@ import time
 
 st.set_page_config(layout="wide")
 
-# -------------------- CLASSES --------------------
+# ------------------ CLASSES ------------------
 
 class VenturiMeter:
     def __init__(self, d1, d2):
@@ -13,7 +13,6 @@ class VenturiMeter:
         self.d2 = d2
 
     def radius(self, x):
-        """Smooth venturi shape using cosine transition"""
         if x < 3:
             return self.d1 / 2
         elif 3 <= x <= 7:
@@ -22,100 +21,81 @@ class VenturiMeter:
             return self.d1 / 2
 
 
-class Fluid:
-    def __init__(self, rho):
-        self.rho = rho
-
-
 class FlowSimulator:
-    def __init__(self, venturi, fluid, dp):
+    def __init__(self, venturi, rho, dp):
         self.venturi = venturi
-        self.fluid = fluid
+        self.rho = rho
         self.dp = dp
 
     def area(self, r):
         return np.pi * r**2
 
     def velocity(self, x):
-        """Velocity varies with area (continuity + Bernoulli)"""
         r = self.venturi.radius(x)
         A = self.area(r)
 
-        r_throat = self.venturi.d2 / 2
-        A2 = self.area(r_throat)
+        r2 = self.venturi.d2 / 2
+        A2 = self.area(r2)
+        A1 = self.area(self.venturi.d1 / 2)
 
-        v2 = np.sqrt((2*self.dp)/(self.fluid.rho*((self.area(self.venturi.d1/2)/A2)**2 - 1)))
-        v = v2 * (A2 / A)
-
-        return v
+        v2 = np.sqrt((2*self.dp)/(self.rho*((A1/A2)**2 - 1)))
+        return v2 * (A2 / A)
 
 
-# -------------------- ANIMATION --------------------
+# ------------------ ANIMATION ------------------
 
 def animate():
     venturi = VenturiMeter(d1, d2)
-    fluid = Fluid(rho)
-    flow = FlowSimulator(venturi, fluid, dp)
+    flow = FlowSimulator(venturi, rho, dp)
 
     placeholder = st.empty()
 
-    # particles
-    num_particles = 80
-    particles_x = np.random.uniform(0, 10, num_particles)
-    particles_y = np.random.uniform(-d1/2, d1/2, num_particles)
+    x = np.linspace(0, 10, 400)
+    y_lines = np.linspace(-d1/2, d1/2, 25)
+
+    phase = 0
 
     for _ in range(200):
         fig, ax = plt.subplots(figsize=(16,5))
 
-        x_vals = np.linspace(0, 10, 400)
-        y_top = [venturi.radius(x) for x in x_vals]
+        y_top = [venturi.radius(xi) for xi in x]
         y_bottom = [-y for y in y_top]
 
-        # draw venturi walls
-        ax.plot(x_vals, y_top, color="black", linewidth=2)
-        ax.plot(x_vals, y_bottom, color="black", linewidth=2)
+        # Draw pipe
+        ax.plot(x, y_top, color="black", linewidth=2)
+        ax.plot(x, y_bottom, color="black", linewidth=2)
 
-        new_x = []
-        new_y = []
+        # STREAMLINES (REAL FLOW LOOK)
+        for y0 in y_lines:
+            y_stream = []
+            x_stream = []
 
-        for i in range(num_particles):
-            x = particles_x[i]
-            y = particles_y[i]
+            for xi in x:
+                r = venturi.radius(xi)
+                if abs(y0) < r:
+                    v = flow.velocity(xi)
 
-            r = venturi.radius(x)
+                    # phase shift creates motion illusion
+                    xi_shift = xi + (phase * v * 0.02)
 
-            # keep particle inside pipe
-            if abs(y) > r:
-                y = np.random.uniform(-r, r)
+                    x_stream.append(xi_shift % 10)
+                    y_stream.append(y0)
 
-            v = flow.velocity(x)
+            velocities = [flow.velocity(xi) for xi in x_stream]
 
-            # smooth movement
-            x_new = x + v * 0.03
+            ax.plot(
+                x_stream,
+                y_stream,
+                color=plt.cm.plasma(np.mean(velocities)/max(velocities)),
+                linewidth=1.5,
+                alpha=0.8
+            )
 
-            if x_new > 10:
-                x_new = 0
-
-            new_x.append(x_new)
-            new_y.append(y)
-
-        particles_x[:] = new_x
-        particles_y[:] = new_y
-
-        # velocity color
-        velocities = [flow.velocity(x) for x in particles_x]
-
-        sc = ax.scatter(
-            particles_x,
-            particles_y,
-            c=velocities,
-            cmap="plasma",
-            s=25
-        )
+        phase += 1
 
         ax.set_xlim(0, 10)
         ax.set_ylim(-d1/2 - 0.2, d1/2 + 0.2)
-        ax.set_title("Realistic Venturi Flow (Velocity-Based Animation)")
+        ax.set_title("Venturi Meter – Visible Fluid Flow")
         ax.axis("off")
 
         placeholder.pyplot(fig)
@@ -124,14 +104,14 @@ def animate():
         time.sleep(0.03)
 
 
-# -------------------- UI --------------------
+# ------------------ UI ------------------
 
-st.title("Venturi Meter Flow Simulation (Realistic)")
+st.title("Venturi Meter (Real Flow Visualization)")
 
 d1 = st.sidebar.slider("Inlet Diameter", 1.0, 5.0, 3.0)
 d2 = st.sidebar.slider("Throat Diameter", 0.5, 3.0, 1.5)
 dp = st.sidebar.slider("Pressure Difference", 1000, 10000, 5000)
-rho = st.sidebar.slider("Fluid Density", 500, 1500, 1000)
+rho = st.sidebar.slider("Density", 500, 1500, 1000)
 
 if st.button("Start Simulation"):
     animate()
