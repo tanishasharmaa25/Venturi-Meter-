@@ -1,51 +1,31 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 st.set_page_config(layout="wide")
 
-# -------------------------
-# CLASS 1: Venturi Meter
-# -------------------------
+# -------------------- CLASSES --------------------
 
 class VenturiMeter:
     def __init__(self, d1, d2):
         self.d1 = d1
         self.d2 = d2
 
-    def area(self, d):
-        return np.pi * (d / 2) ** 2
+    def radius(self, x):
+        """Smooth venturi shape using cosine transition"""
+        if x < 3:
+            return self.d1 / 2
+        elif 3 <= x <= 7:
+            return (self.d2/2) + (self.d1/2 - self.d2/2) * (1 + np.cos(np.pi*(x-3)/4)) / 2
+        else:
+            return self.d1 / 2
 
-    def get_areas(self):
-        return self.area(self.d1), self.area(self.d2)
-
-    def shape(self):
-        x = np.linspace(0, 10, 300)
-
-        y = np.piecewise(
-            x,
-            [x < 3, (x >= 3) & (x <= 7), x > 7],
-            [
-                lambda x: self.d1 / 2,
-                lambda x: self.d1 / 2 - (self.d1 - self.d2) / 2 * ((x - 3) / 4),
-                lambda x: self.d1 / 2,
-            ],
-        )
-        return x, y
-
-
-# -------------------------
-# CLASS 2: Fluid
-# -------------------------
 
 class Fluid:
-    def __init__(self, density):
-        self.density = density
+    def __init__(self, rho):
+        self.rho = rho
 
-
-# -------------------------
-# CLASS 3: Flow Simulator
-# -------------------------
 
 class FlowSimulator:
     def __init__(self, venturi, fluid, dp):
@@ -53,179 +33,105 @@ class FlowSimulator:
         self.fluid = fluid
         self.dp = dp
 
-    def calculate_velocity(self):
-        A1, A2 = self.venturi.get_areas()
-        rho = self.fluid.density
+    def area(self, r):
+        return np.pi * r**2
 
-        v2 = np.sqrt((2 * self.dp) / (rho * ((A1 / A2) ** 2 - 1)))
-        v1 = (A2 / A1) * v2
+    def velocity(self, x):
+        """Velocity varies with area (continuity + Bernoulli)"""
+        r = self.venturi.radius(x)
+        A = self.area(r)
 
-        return v1, v2
+        r_throat = self.venturi.d2 / 2
+        A2 = self.area(r_throat)
 
-    def velocity_field(self):
-        x, y = self.venturi.shape()
-        A1, _ = self.venturi.get_areas()
+        v2 = np.sqrt((2*self.dp)/(self.fluid.rho*((self.area(self.venturi.d1/2)/A2)**2 - 1)))
+        v = v2 * (A2 / A)
 
-        A_x = np.pi * (2 * y) ** 2 / 4
-        v_x = A1 / A_x
+        return v
 
-        return x, y, v_x
 
-    # ✅ FINAL STREAMLINE VISUALIZATION
-    def draw_streamlines(self):
-        x, y, v_x = self.velocity_field()
+# -------------------- ANIMATION --------------------
 
-        # Grid
-        Y_vals = np.linspace(-self.venturi.d1/2, self.venturi.d1/2, 100)
-        X, Y = np.meshgrid(x, Y_vals)
+def animate():
+    venturi = VenturiMeter(d1, d2)
+    fluid = Fluid(rho)
+    flow = FlowSimulator(venturi, fluid, dp)
 
-        U = np.zeros_like(X)
-        V = np.zeros_like(X)
+    placeholder = st.empty()
 
-        for i in range(len(x)):
-            for j in range(len(Y_vals)):
-                if abs(Y[j, i]) <= y[i]:
+    # particles
+    num_particles = 80
+    particles_x = np.random.uniform(0, 10, num_particles)
+    particles_y = np.random.uniform(-d1/2, d1/2, num_particles)
 
-                    # Laminar profile
-                    if y[i] != 0:
-                        profile = 1 - (Y[j, i] / y[i])**2
-                    else:
-                        profile = 1
+    for _ in range(200):
+        fig, ax = plt.subplots(figsize=(16,5))
 
-                    U[j, i] = v_x[i] * profile
-                    V[j, i] = 0
-                else:
-                    U[j, i] = 0
-                    V[j, i] = 0
+        x_vals = np.linspace(0, 10, 400)
+        y_top = [venturi.radius(x) for x in x_vals]
+        y_bottom = [-y for y in y_top]
 
-        fig, ax = plt.subplots(figsize=(20, 8))
+        # draw venturi walls
+        ax.plot(x_vals, y_top, color="black", linewidth=2)
+        ax.plot(x_vals, y_bottom, color="black", linewidth=2)
 
-        # Pipe walls
-        ax.plot(x, y, color="black", linewidth=2)
-        ax.plot(x, -y, color="black", linewidth=2)
+        new_x = []
+        new_y = []
 
-        # Speed for coloring
-        speed = np.sqrt(U**2 + V**2)
-        norm = speed / np.max(speed)
+        for i in range(num_particles):
+            x = particles_x[i]
+            y = particles_y[i]
 
-        # Streamlines
-        ax.streamplot(
-            X, Y, U, V,
-            color=norm,
-            cmap='plasma',
-            density=2,
-            linewidth=1.5
+            r = venturi.radius(x)
+
+            # keep particle inside pipe
+            if abs(y) > r:
+                y = np.random.uniform(-r, r)
+
+            v = flow.velocity(x)
+
+            # smooth movement
+            x_new = x + v * 0.03
+
+            if x_new > 10:
+                x_new = 0
+
+            new_x.append(x_new)
+            new_y.append(y)
+
+        particles_x[:] = new_x
+        particles_y[:] = new_y
+
+        # velocity color
+        velocities = [flow.velocity(x) for x in particles_x]
+
+        sc = ax.scatter(
+            particles_x,
+            particles_y,
+            c=velocities,
+            cmap="plasma",
+            s=25
         )
 
         ax.set_xlim(0, 10)
-        ax.set_ylim(-self.venturi.d1/2, self.venturi.d1/2)
-        ax.set_title("Venturi Flow (Streamline Visualization)", fontsize=18)
+        ax.set_ylim(-d1/2 - 0.2, d1/2 + 0.2)
+        ax.set_title("Realistic Venturi Flow (Velocity-Based Animation)")
         ax.axis("off")
 
-        return fig
+        placeholder.pyplot(fig)
+        plt.close(fig)
 
-    def plot_graph(self):
-        x, y, v_x = self.velocity_field()
-
-        fig, ax = plt.subplots(figsize=(12, 5))
-        ax.plot(x, v_x, linewidth=3)
-
-        ax.set_title("Velocity Distribution Along Venturi")
-        ax.set_xlabel("Pipe Length")
-        ax.set_ylabel("Velocity")
-
-        return fig
+        time.sleep(0.03)
 
 
-# -------------------------
-# UI
-# -------------------------
+# -------------------- UI --------------------
 
-menu = st.sidebar.selectbox("Select Section", ["Simulation", "Notes", "Quiz"])
+st.title("Venturi Meter Flow Simulation (Realistic)")
 
-# -------------------------
-# SIMULATION
-# -------------------------
+d1 = st.sidebar.slider("Inlet Diameter", 1.0, 5.0, 3.0)
+d2 = st.sidebar.slider("Throat Diameter", 0.5, 3.0, 1.5)
+dp = st.sidebar.slider("Pressure Difference", 1000, 10000, 5000)
+rho = st.sidebar.slider("Fluid Density", 500, 1500, 1000)
 
-if menu == "Simulation":
-    st.title("Venturi Meter Flow Simulation (OOP + Streamlines)")
-
-    col1, col2 = st.columns([1, 2])
-
-    with col1:
-        d1 = st.slider("Inlet Diameter", 0.2, 1.0, 0.5)
-        d2 = st.slider("Throat Diameter", 0.1, 0.5, 0.2)
-        dp = st.slider("Pressure Difference", 100, 5000, 1000)
-        rho = st.slider("Fluid Density", 500, 1500, 1000)
-
-        venturi = VenturiMeter(d1, d2)
-        fluid = Fluid(rho)
-        sim = FlowSimulator(venturi, fluid, dp)
-
-        v1, v2 = sim.calculate_velocity()
-
-        st.metric("Inlet Velocity", f"{v1:.2f} m/s")
-        st.metric("Throat Velocity", f"{v2:.2f} m/s")
-
-        if st.button("Show Flow"):
-            st.pyplot(sim.draw_streamlines(), use_container_width=True)
-
-    with col2:
-        st.subheader("Velocity Graph")
-        st.pyplot(sim.plot_graph())
-
-
-# -------------------------
-# NOTES
-# -------------------------
-
-elif menu == "Notes":
-    st.header("Venturi Meter Notes")
-
-    st.markdown("""
-Venturi meter works on:
-- Bernoulli’s Principle
-- Continuity Equation
-
-Fluid accelerates at throat and pressure decreases.
-""")
-
-
-# -------------------------
-# QUIZ
-# -------------------------
-
-elif menu == "Quiz":
-    st.header("Quiz")
-
-    if "score" not in st.session_state:
-        st.session_state.score = 0
-    if "attempted" not in st.session_state:
-        st.session_state.attempted = 0
-
-    questions = [
-        ("Velocity is maximum at?", ["Inlet", "Throat", "Outlet"], "Throat"),
-        ("Pressure is lowest at?", ["Inlet", "Throat", "Outlet"], "Throat"),
-        ("Which equation ensures conservation?", ["Bernoulli", "Continuity", "Newton"], "Continuity"),
-    ]
-
-    for i, (q, options, ans) in enumerate(questions):
-        st.subheader(q)
-        choice = st.radio("Select", options, key=i)
-
-        if st.button("Submit", key=f"btn{i}"):
-            st.session_state.attempted += 1
-            if choice == ans:
-                st.success("Correct")
-                st.session_state.score += 1
-            else:
-                st.error(f"Wrong. Correct: {ans}")
-
-    st.subheader("Score Board")
-    st.metric("Score", st.session_state.score)
-    st.metric("Attempted", st.session_state.attempted)
-
-    if st.button("Reset"):
-        st.session_state.score = 0
-        st.session_state.attempted = 0
-        st.rerun()
+if st.button("Start Simulation"):
+    animate()
